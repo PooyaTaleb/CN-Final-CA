@@ -30,12 +30,19 @@ queue <Packet> qr;
 int packet_size=1000;
 
 
-vector < pair <Host,string> > hosts;
-vector < pair <Router,string> > routers;
 vector < pair < pair<string,string>,int > > links;
 vector < pair <Node,string> > nodes;
 
 
+Node::Node(string address, string type){
+    ip=address;
+    if (type=="host"){
+        ishost=true;
+    }
+    else{
+        isrouter=true;
+    }
+}
 
 Node::Node(){
 
@@ -76,23 +83,23 @@ void Node::dvrp(string src){
 
 }
 
+string Node::getip(){
+    return ip;
+}
+
 void Node::showTable(){
-    cout <<endl;
+    cout <<endl<<endl;
+    cout<<"routing table for node "<<ip<<endl;
+    cout<<endl;
     cout<<"destination      "<<"cost         "<<"next hop"<<endl;
     for(auto i:routingTable){
         cout<<i.first<<"                "<<i.second.first<<"                  "<<i.second.second<<endl;
     }
 }
 
-Host::Host(string address){
-    ip==address;
-    cwnd=1;
-    ssthresh=numeric_limits<int>::max();
 
-}
-Host::Host(){}
-
-void Host::sendFile(){
+void Node::sendFile(){
+    string filename="dt_files/out-1MB.dt";
     ifstream file(filename, ios::in | ios::binary);
 
 
@@ -138,8 +145,9 @@ void Host::sendFile(){
             }                    
 }
 
-void Host::receiveFile(){
-    ofstream file("output.dt", ios::out | ios::binary);
+void Node::receiveFile(){
+    string filename="output.dt";
+    ofstream file(filename, ios::out | ios::binary);
     while(true){
         if (qb.empty()){
             continue;
@@ -154,12 +162,8 @@ void Host::receiveFile(){
 }
 
 
-Router::Router(string address){
-    ip==address;
-}
-Router::Router(){}
 
-void Router::routePackets(){
+void Node::routePackets(){
     while(true){
         // cout<<"hello"<<endl;
         // this_thread::sleep_for(chrono::seconds(2));
@@ -220,8 +224,7 @@ int main(){
         if (v[0]=="add"){
             if (v[1]=="hosts"){
                 for (int i=2;i<v.size();i++){
-                    Host a(v[i]);
-                    hosts.push_back(make_pair(a,v[i]));
+                    Node a(v[i],"host");
                     nodes.push_back(make_pair(a,v[i]));
 
                 }
@@ -230,8 +233,7 @@ int main(){
 
             else if(v[1]=="routers"){
                 for (int i=2;i<v.size();i++){
-                    Router r(v[i]);
-                    routers.push_back(make_pair(r,v[i]));
+                    Node r(v[i],"router");
                     nodes.push_back(make_pair(r,v[i]));
                 }
             }
@@ -291,6 +293,21 @@ int main(){
                 }
             }
 
+        }
+
+        else if(v[0]=="send"){
+            Node sender;
+            Node receiver;
+            for(auto node:nodes){
+                if(node.second==v[1]){
+                    sender=node.first;
+                }
+                if(node.second==v[2]){
+                    receiver=node.first;
+                }
+            }
+            sender.showTable();
+            receiver.showTable();
         }
 
 
