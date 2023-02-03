@@ -255,9 +255,24 @@ int main(){
             }
         }
 
-
+        // updates link weight 
         else if (v[0]=="update"){
-            
+            if (v.size()==5){
+                for(auto i=links.begin();i<links.end();i++){
+                    if( i->first.first==v[2] && i->first.second==v[3] ){
+                        i->second=stoi(v[4]);
+                    }
+                }
+                for(auto i=links.begin();i<links.end();i++){
+                    if( i->first.first==v[3] && i->first.second==v[2] ){
+                        i->second=stoi(v[4]);
+                    }
+                }
+                
+            }
+            else{
+
+            }
         }
 
         // removes a link from the topology
