@@ -6,41 +6,30 @@ using namespace std;
 
 class Node{
     public:
+        Node(string address, string type);
+
         Node();
+
 
         void dvrp(string src);
 
         void showTable();
 
-        map <string,pair<int,string>> routingTable;
-
-    private:
-};
-
-
-class Host: public Node{
-    public:
-        Host(string address);
-        Host();
+        string getip();
 
         void sendFile();
+
         void receiveFile();
-
-    private:
-        int cwnd;
-        int ssthresh;
-        string filename;
-        string ip;
-
-};
-
-class Router: public Node{
-    public:
-        Router(string address);
-        Router();
 
         void routePackets();
 
+        map <string,pair<int,string>> routingTable;
+
     private:
         string ip;
+        bool ishost=false;
+        bool isrouter=false;
 };
+
+
+
