@@ -48,6 +48,22 @@ In short it's better to use Selective Repeat when we have a good connection and 
 
 
 ## Part 3.1.3
->1. Do you know a better way to update the table after a change in topology?
+>1.Do you know a better way to update the table after a change in topology?
 
-We make each node send a periodic update message even if nothing has changed this lets the neighboring nodes know that the link is active and we allow the nodes to send a message to *trigger* an update in the case of a node failing. We can also use the methods known as **split horizon** and **split horizon with poison reverse**
+We make each node send a periodic update message even if nothing has changed this lets the neighboring nodes know that the link is active and we allow the nodes to send a message to *trigger* an update in the case of a node failing. We can also use the techniques known as **split horizon** and **split horizon with poison reverse** to improve stabilization time
+
+>2.What are the main differences between LSRP and DVRP? State the advantages and disadvantages.
+
+The LSRP algorithm is based on Dijsktra's algorithm and DVRP is based on Bellman-ford. Unlike DVRP every node in LSRP has enough information to build a complete map of the network. LSRP can assign costs to each link while DVRP usually only takes hops into account. in DVRP each node sends everything in knows to its neighbors while in LSRP each node sends its neighbors information to every other node (floods the network). There are no persistent loops or count to infinity proplem in LSRP (the same can not be said for DVRP). 
+
+
+| category                | DVRP                | LSRP                  |
+| -------------           | -------------       | -------------         |
+| Base algorithm          | Bellman-Ford        | Dijkstra              |
+| Converge Time           | slow                | fast                  |
+| Count to infinity       | yes                 | no                    |
+| Persistent loop         | yes                 | no                    |
+| Practical applications  | RIP                 | OSPF                  |
+| Node's View             | neighbor view       | full network          |
+| packets                 | full knowledge      | neighbor info         |
+| path cost               | hops only           | can include anything  |
