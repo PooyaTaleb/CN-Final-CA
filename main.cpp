@@ -7,6 +7,8 @@
 #include <chrono>
 #include <map>
 
+#include "classes.h"
+
 using namespace std;
 
 struct Packet{
@@ -27,21 +29,49 @@ queue <Packet> qr;
 int packet_size=1000;
 
 
-class Host{
-    public:
-        Host(string address): cwnd(1), ssthresh(numeric_limits<int>::max())
-        
-        {
-            ip=address;
+vector < pair <Host,string> > hosts;
+vector < pair <Router,string> > routers;
+vector < pair < pair<string,string>,int > > links;
+vector < pair <Node,string> > nodes;
+
+
+Node::Node(){
+
+}
+
+void Node::dvrp(string src){
+    cout<<src<<endl;
+    map<string, int> dist;
+    for(auto &node:nodes){
+        dist[node.second]=numeric_limits<int>::max();
+    }
+    dist[src]=0;
+
+    for(int i=1; i<=nodes.size(); i++){
+        for(int j=0; j<links.size(); j++){
+            string u=links[j].first.first;
+            string v=links[j].first.second;
+            int weight=links[j].second;
+            if(dist[u]!=numeric_limits<int>::max() && dist[u]+weight < dist[v]){
+                dist[v]=dist[u]+weight;
+            }
+
         }
-        Host() 
+    }
 
-        {
+    for(auto i:dist){
+        cout<<i.first<<" "<<i.second<<endl;
+    }    
+}
 
-        }
 
-        void sendFile(){
-            ifstream file(filename, ios::in | ios::binary);
+Host::Host(string address){
+
+
+}
+
+void Host::sendFile(){
+    ifstream file(filename, ios::in | ios::binary);
 
 
 
@@ -83,75 +113,49 @@ class Host{
 
             for (auto i=packets.begin(); i!=packets.end() ;i++){
                 qr.push(*i);
-            }
+            }                    
+}
 
-
-
-
-
+void Host::receiveFile(){
+    ofstream file("output.dt", ios::out | ios::binary);
+    while(true){
+        if (qb.empty()){
+            continue;
         }
-
-        void receiveFile(){
-            ofstream file("output.dt", ios::out | ios::binary);
-            while(true){
-                if (qb.empty()){
-                    continue;
-                }
-                else{
-                    Packet p=qb.front();
-                    cout<<p.id<<endl;
-                    qb.pop();
-                    file.write(p.data,packet_size);
-                }
-            }
+        else{
+            Packet p=qb.front();
+            cout<<p.id<<endl;
+            qb.pop();
+            file.write(p.data,packet_size);
         }
+    }
+}
 
-    private:
-        int cwnd;
-        int ssthresh;
-        string filename;
-        string ip;
 
-};
+Router::Router(string adress){
 
-class Router{
-    public:
-        Router(string address)
+}
+Router::Router(){
 
-        {
-            ip=address;
+}
+
+void Router::routePackets(){
+    while(true){
+        // cout<<"hello"<<endl;
+        // this_thread::sleep_for(chrono::seconds(2));
+        if (qr.empty()){
+            continue;
         }
-        Router()
+        else{
+            Packet p = qr.front();
+            cout<<p.id<<endl;
+            qr.pop();
+            this_thread::sleep_for(chrono::milliseconds(1));
 
-        {
-
+            qb.push(p);
         }
-
-        void routePackets(){
-            while(true){
-                // cout<<"hello"<<endl;
-                // this_thread::sleep_for(chrono::seconds(2));
-                if (qr.empty()){
-                    continue;
-                }
-                else{
-                    Packet p = qr.front();
-                    cout<<p.id<<endl;
-                    qr.pop();
-                    this_thread::sleep_for(chrono::milliseconds(1));
-
-                    qb.push(p);
-                }
-            }
-        }
-        string getip(){
-            return ip;
-        }
-
-    private:
-        string ip;
-};
-
+    }
+}
 
 vector <string> splitString(string s){
     string temp="";
@@ -173,72 +177,6 @@ vector <string> splitString(string s){
     return v;
 }
 
-vector < pair <Host,string> > hosts;
-vector < pair <Router,string> > routers;
-vector < pair < pair<string,string>,int > > links;
-
-
-void dvrp(){
-    map<pair<string, string>, int> distances;
-    for (auto &host: hosts){
-        for (auto &link : links){
-            if (link.first.first==host.second){
-                distances[make_pair(host.second , link.first.second)]=link.second;
-            }
-        }
-    }
-    for (auto &router: routers){
-        for (auto &link : links){
-            if (link.first.first==router.second){
-                distances[make_pair(router.second , link.first.second)]=link.second;
-            }
-        }
-    }
-
-    
-    for(int i=0; i<routers.size()+hosts.size();i++){
-        for(auto &host:hosts){
-            for(auto &link:links){
-                int dist=distances[make_pair(host.second,link.first.second)]+link.second;
-                if(dist < distances[make_pair(link.first.second,host.second)]){
-                    distances[make_pair(link.first.second,host.second)]=dist;
-                }
-            }
-        }
-
-        for(auto &router:routers){
-            for(auto &link:links){
-                int dist=distances[make_pair(router.second,link.first.second)]+link.second;
-                if(dist < distances[make_pair(link.first.second,router.second)]){
-                    distances[make_pair(link.first.second,router.second)]=dist;
-                }
-            }
-        }
-    }
-
-    for (auto &host:hosts){
-        for (auto &host2:hosts){
-            if (host.second!=host2.second){
-                cout<<host.second<<" "<<host2.second<<" "<<distances[make_pair(host.second,host2.second)]<<endl;
-            }
-        }
-        for (auto &router:routers){
-            cout<<host.second<<" "<<router.second<<" "<<distances[make_pair(host.second,router.second)]<<endl;
-        }
-    }
-
-    for (auto &router: routers){
-        for(auto &router2:routers){
-            if(router.second!=router2.second){
-                cout<<router.second<<" "<<router2.second<<" "<<distances[make_pair(router.second,router2.second)]<<endl;
-            }
-        }
-    }
-
-
-}
-
-
 int main(){
     // Host a("dt_files/out-1MB.dt");
     // Router r1;
@@ -253,17 +191,17 @@ int main(){
     // B.join();
 
     string input;
-    getline(cin,input);
-    vector <string> v=splitString(input);
+    vector <string> v;
     while (true){
+        getline(cin,input);
+        v=splitString(input);
         if (v[0]=="add"){
             if (v[1]=="hosts"){
                 for (int i=2;i<v.size();i++){
                     Host a(v[i]);
-                    pair<Host,string> p;
-                    p.first=a;
-                    p.second=v[i];
-                    hosts.push_back(p);
+                    hosts.push_back(make_pair(a,v[i]));
+                    nodes.push_back(make_pair(a,v[i]));
+
                 }
             }
         
@@ -271,19 +209,19 @@ int main(){
             else if(v[1]=="routers"){
                 for (int i=2;i<v.size();i++){
                     Router r(v[i]);
-                    pair<Router,string> p;
-                    p.first=r;
-                    p.second=v[i];
-                    routers.push_back(p);
+                    routers.push_back(make_pair(r,v[i]));
+                    nodes.push_back(make_pair(r,v[i]));
                 }
+
                 // start each router its routing process.
-                for (auto i=routers.begin();i!=routers.end();i++){
-                    i->first.routePackets();
-                }
+                // for (auto i=routers.begin();i!=routers.end();i++){
+                //     i->first.routePackets();
+                // }
             }
 
             else if(v[1]=="link"){
                 links.push_back( make_pair(make_pair(v[2],v[3]) , stoi(v[4])));
+                links.push_back( make_pair(make_pair(v[3],v[2]) , stoi(v[4])));
 
             }
         }
@@ -297,7 +235,9 @@ int main(){
 
         }
         else if (v[0]=="run"){
-            dvrp();
+            for (auto node:nodes){
+                node.first.dvrp(node.second);
+            }
         }
         else if (v[0]=="draw"){
 
