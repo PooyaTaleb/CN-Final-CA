@@ -67,3 +67,12 @@ The LSRP algorithm is based on Dijsktra's algorithm and DVRP is based on Bellman
 | Node's View             | neighbor view       | full network          |
 | packets                 | full knowledge      | neighbor info         |
 | path cost               | hops only           | can include anything  |
+
+## Part 3.2.2
+>1.What are the differences between Random Early Detection and Explicit Congestion Notification? When would you use each one?
+
+Random Early Detection (which we will refer to as RED after this) works by having each node monitor its own queues and in the case of imminent congestion implicitly signaling source node to adjust its congestion window. It does this by dropping a packet and therefore having the source be notified of a timeout (or duplicate ACKs). The *early* part referes to the fact that the packets will be dropped before actually filling the queue. The *random* part of the name refers to the fact that the dropped packet is chosen randomly (with a probabilty). This mechanism was designed to work with TCP in mind.
+
+Explicit Congestion Notification (which we will refer to as ECN after this) is a modification of RED which chooses to **explicitly** mark some packets and pass them along rather than drop them thus **notifying** nodes along the path. This can result in the nodes taking more effective action and prevent the need to send some data multiple times.
+
+Marking a packet allows the endpoints to adjust to congestion more efficiently as they may be able to avoid losses and timeouts altogether by slowing their sending rates. However, transport protocols must be modified to understand and account for the congestion bit, but current protocols (such as TCP) need not be modified to use RED. Also, dropping is a way to rein in an ill-behaved sender. Meaning the threat of dropping a packet may be enough to stop malicious nodes from sending too much data.
