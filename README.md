@@ -76,3 +76,5 @@ Random Early Detection (which we will refer to as RED after this) works by havin
 Explicit Congestion Notification (which we will refer to as ECN after this) is a modification of RED which chooses to **explicitly** mark some packets and pass them along rather than drop them thus **notifying** nodes along the path. This can result in the nodes taking more effective action and prevent the need to send some data multiple times.
 
 Marking a packet allows the endpoints to adjust to congestion more efficiently as they may be able to avoid losses and timeouts altogether by slowing their sending rates. However, transport protocols must be modified to understand and account for the congestion bit, but current protocols (such as TCP) need not be modified to use RED. Also, dropping is a way to rein in an ill-behaved sender. Meaning the threat of dropping a packet may be enough to stop malicious nodes from sending too much data.
+
+This means that if we are working with more modern networks (that are more likely to support ECN) it's probably better to use ECN over RED but working with older computers and networks would probably require RED to be used.
