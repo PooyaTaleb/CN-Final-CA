@@ -1,5 +1,6 @@
 #include <string>
 #include <limits>
+#include <map>
 
 using namespace std;
 
@@ -8,6 +9,10 @@ class Node{
         Node();
 
         void dvrp(string src);
+
+        void showTable();
+
+        map <string,pair<int,string>> routingTable;
 
     private:
 };
