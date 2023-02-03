@@ -6,6 +6,7 @@
 #include <limits>
 #include <chrono>
 #include <map>
+#include <algorithm>
 
 #include "classes.h"
 
@@ -35,40 +36,61 @@ vector < pair < pair<string,string>,int > > links;
 vector < pair <Node,string> > nodes;
 
 
+
 Node::Node(){
 
 }
 
 void Node::dvrp(string src){
-    cout<<src<<endl;
-    map<string, int> dist;
     for(auto &node:nodes){
-        dist[node.second]=numeric_limits<int>::max();
+        routingTable[node.second].first=numeric_limits<int>::max();
     }
-    dist[src]=0;
+    routingTable[src].first=0;
+    routingTable[src].second=src;
+    
+    string temp="";
+
+
+    vector <string> neighbors;
 
     for(int i=1; i<=nodes.size(); i++){
         for(int j=0; j<links.size(); j++){
             string u=links[j].first.first;
             string v=links[j].first.second;
             int weight=links[j].second;
-            if(dist[u]!=numeric_limits<int>::max() && dist[u]+weight < dist[v]){
-                dist[v]=dist[u]+weight;
+            if(routingTable[u].first!=numeric_limits<int>::max() && routingTable[u].first+weight < routingTable[v].first){
+                if (src==u){
+                    neighbors.push_back(v);
+                    temp=v;
+                }
+                if(find(neighbors.begin(),neighbors.end(),u)!=neighbors.end()){
+                    temp=u;
+                }
+                routingTable[v].first=routingTable[u].first+weight;
+                routingTable[v].second=temp;
             }
 
         }
     }
 
-    for(auto i:dist){
-        cout<<i.first<<" "<<i.second<<endl;
-    }    
+
 }
 
+void Node::showTable(){
+    cout <<endl;
+    cout<<"destination      "<<"cost         "<<"next hop"<<endl;
+    for(auto i:routingTable){
+        cout<<i.first<<"                "<<i.second.first<<"                  "<<i.second.second<<endl;
+    }
+}
 
 Host::Host(string address){
-
+    ip==address;
+    cwnd=1;
+    ssthresh=numeric_limits<int>::max();
 
 }
+Host::Host(){}
 
 void Host::sendFile(){
     ifstream file(filename, ios::in | ios::binary);
@@ -132,12 +154,10 @@ void Host::receiveFile(){
 }
 
 
-Router::Router(string adress){
-
+Router::Router(string address){
+    ip==address;
 }
-Router::Router(){
-
-}
+Router::Router(){}
 
 void Router::routePackets(){
     while(true){
@@ -156,6 +176,8 @@ void Router::routePackets(){
         }
     }
 }
+
+// help functions
 
 vector <string> splitString(string s){
     string temp="";
@@ -212,11 +234,6 @@ int main(){
                     routers.push_back(make_pair(r,v[i]));
                     nodes.push_back(make_pair(r,v[i]));
                 }
-
-                // start each router its routing process.
-                // for (auto i=routers.begin();i!=routers.end();i++){
-                //     i->first.routePackets();
-                // }
             }
 
             else if(v[1]=="link"){
@@ -225,32 +242,68 @@ int main(){
 
             }
         }
+
+
         else if (v[0]=="update"){
-
+            
         }
+
+
         else if (v[0]=="remove"){
+            cout<<links.size()<<endl;
+            for(auto i=links.begin();i<links.end();i++){
+                if( i->first.first==v[2] && i->first.second==v[3] ){
+                    links.erase(i);
+                }
+            }
+            
+            for(auto i=links.begin();i<links.end();i++){
+                if( i->first.first==v[3] && i->first.second==v[2] ){
+                    links.erase(i);
+                }
+            }
 
+            cout<<links.size()<<endl;
         }
+
+
         else if (v[0]=="log"){
 
         }
+
+
         else if (v[0]=="run"){
-            for (auto node:nodes){
+            for (auto &node:nodes){
                 node.first.dvrp(node.second);
             }
         }
+
+
         else if (v[0]=="draw"){
 
         }
+
+
         else if (v[0]=="show"){
+            for (auto &node:nodes){
+                if (node.second==v[2]){
+                    node.first.showTable();
+                }
+            }
 
         }
+
+
         else if (v[0]=="exit"){
             break;
         }
+
+
         else{
             cout<<"your command is wrong try again"<<endl;
         }
+
+
     }
     
     
